@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Roleta — Sinal AI (5 números) — RLT</title>
+<style>
+  :root{
+    --bg:#060607;
+    --panel:#0f1114;
+    --gold:#d6b26e;
+    --accent:#e33b3b;
+    --muted:#9aa3ab;
+    --glass: rgba(255,255,255,0.03);
+    --card-radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:
+      radial-gradient(ellipse at 10% 10%, rgba(255,255,255,0.02), transparent 10%),
+      linear-gradient(180deg, #060607 0%, #0b0b0d 100%);
+    color:#e6eef3;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:14px;
+  }
+  header{display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .brand{display:flex; gap:10px; align-items:center;}
+  .logo{width:52px; height:52px; border-radius:12px; background: linear-gradient(135deg,var(--gold), #b58f4a); display:flex; align-items:center; justify-content:center; font-weight:700; color:#0b0b0d; font-size:18px; box-shadow: 0 6px 18px rgba(0,0,0,0.6);}
+  h1{font-size:16px;margin:0}
+  p.sub{margin:0;color:var(--muted);font-size:12px}
+  .affiliate{background:linear-gradient(90deg,#2fb04b,#1f8f3a); border:none; padding:10px 12px; border-radius:10px; color:#06110a; font-weight:700; text-decoration:none;}
+
+  main{display:grid; gap:12px;}
+  .card{background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius: var(--card-radius); padding:12px; box-shadow: 0 6px 24px rgba(2,6,23,0.55), inset 0 1px 0 rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03);}
+
+  .grid{display:grid; grid-template-columns: repeat(9,1fr); gap:6px;}
+  .num{padding:8px 6px; border-radius:8px; text-align:center; font-weight:700; font-size:14px; cursor:pointer; user-select:none; box-shadow: 0 4px 10px rgba(0,0,0,0.6);}
+  .num.red{background:#b93b3b;color:#fff}
+  .num.black{background:#22262b;color:#fff}
+  .num.zero{background:linear-gradient(180deg,#0f6f6a,#0b4f4b); color:#dff8f4}
+  .controls{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap}
+  .btn{background:var(--glass); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:10px; color:var(--gold); font-weight:700; cursor:pointer;}
+  .btn.secondary{color:var(--muted); font-weight:600}
+  .btn.warn{color:var(--accent)}
+  input[type="number"]{padding:8px; border-radius:8px; border:none; background:rgba(255,255,255,0.02); color:inherit; width:88px; text-align:center;}
+
+  .split{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+  .history-list{display:flex; gap:8px; flex-wrap:wrap; padding:8px; background:rgba(255,255,255,0.01); border-radius:10px; min-height:56px;}
+  .chip{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700; box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+
+  .stats{display:flex; flex-direction:column; gap:8px}
+  .stat-row{display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.01)}
+  .hot{color:#ffb86b}
+  .cold{color:#9fb6ff}
+
+  .suggestion-area{display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;}
+  .signal-box{flex:1; min-width:220px; background:rgba(255,255,255,0.02); padding:10px; border-radius:10px;}
+  .ai-box{flex:2; min-width:220px; background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01)); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.02);}
+
+  .signal-num{display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:10px; font-weight:800; font-size:18px; margin:6px; box-shadow:0 8px 18px rgba(0,0,0,0.6);}
+  .signal-num.red{background:#b93b3b;color:#fff}
+  .signal-num.black{background:#22262b;color:#fff}
+  .signal-num.zero{background:linear-gradient(180deg,#0f6f6a,#0b4f4b); color:#dff8f4}
+
+  .ai-message{background:rgba(0,0,0,0.25); padding:10px; border-radius:8px; margin-bottom:8px;}
+  .ai-message strong{color:var(--gold)}
+
+  footer{margin-top:8px; color:var(--muted); font-size:12px; text-align:center}
+
+  @media (max-width:720px){
+    .split{grid-template-columns:1fr}
+    .grid{grid-template-columns: repeat(6,1fr)}
+    .suggestion-area{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">RLT</div>
+    <div>
+      <h1>RLT — Sinal AI (5 números)</h1>
+      <p class="sub">Números mais propícios de acordo com o histórico que você alimenta</p>
+    </div>
+  </div>
+  <a class="affiliate" id="affiliateBtn" href="https://1wnrpj.com/?p=f2rb" target="_blank" rel="noopener">Ir para Casa de Apostas</a>
+</header>
+
+<main>
+  <section class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <strong>Adicionar ao histórico</strong>
+        <div style="font-size:12px;color:var(--muted)">Toque no número abaixo ou digite e pressione "Adicionar". O sistema atualiza as sugestões automaticamente.</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:var(--muted)">Fichas por rodada:</div>
+        <div style="font-weight:800;font-size:18px">5</div>
+      </div>
+    </div>
+
+    <div class="grid" id="numbersGrid" style="margin-top:10px"></div>
+
+    <div class="controls" style="margin-top:10px">
+      <input id="numInput" type="number" min="0" max="36" placeholder="0–36" />
+      <button class="btn" id="addBtn">Adicionar</button>
+      <button class="btn secondary" id="undoBtn">Desfazer</button>
+      <button class="btn secondary" id="clearBtn">Limpar</button>
+      <button class="btn secondary" id="exportBtn">Exportar histórico</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" />
+      <button class="btn secondary" id="importBtn">Importar histórico</button>
+    </div>
+  </section>
+
+  <section class="card split">
+    <div>
+      <strong>Histórico (últimos 50)</strong>
+      <div class="history-list" id="historyList" aria-live="polite"></div>
+    </div>
+
+    <div>
+      <strong>Análise rápida</strong>
+      <div class="stats" id="analysisPanel" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <strong>Sinal — 5 números indicados</strong>
+        <div style="font-size:12px;color:var(--muted)">Baseado em frequência, recência e tendência de cor/paridade. Use com responsabilidade.</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" id="getSignalBtn">Obter Sinal (5 números)</button>
+        <button class="btn secondary" id="refreshSignalBtn">Atualizar (aut.)</button>
+      </div>
+    </div>
+
+    <div class="suggestion-area" style="margin-top:12px">
+      <div class="signal-box" id="signalBox">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Números recomendados agora:</div>
+        <div id="signalNumbers" style="display:flex;flex-wrap:wrap;"></div>
+        <div style="margin-top:8px;color:var(--muted);font-size:13px">Clique em um número para copiar / adicionar ao histórico.</div>
+      </div>
+
+      <div class="ai-box" id="aiBox">
+        <div style="font-weight:800;margin-bottom:6px">AI da Mesa — Comentários</div>
+        <div id="aiMessages"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <strong>Exportar / Importar / Dicas</strong>
+    <div style="margin-top:8px;color:var(--muted);font-size:13px">
+      - Histórico é salvo localmente no navegador (localStorage).<br>
+      - O "sinal" é uma sugestão probabilística — não garante resultado.<br>
+      - Recomendações são em português com tom de "AI da mesa".<br>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>Feito para celular — salve como <code>index.html</code> e publique no GitHub Pages.</div>
+</footer>
+
+<script>
+/* Dados básicos */
+const reds = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const blacks = new Set([2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35]);
+const STORAGE_KEY = 'roleta_tracker_history_v2';
+let history = loadHistory();
+
+/* DOM refs */
+const grid = document.getElementById('numbersGrid');
+const historyList = document.getElementById('historyList');
+const analysisPanel = document.getElementById('analysisPanel');
+const numInput = document.getElementById('numInput');
+const addBtn = document.getElementById('addBtn');
+const undoBtn = document.getElementById('undoBtn');
+const clearBtn = document.getElementById('clearBtn');
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const importFile = document.getElementById('importFile');
+const getSignalBtn = document.getElementById('getSignalBtn');
+const refreshSignalBtn = document.getElementById('refreshSignalBtn');
+const signalNumbers = document.getElementById('signalNumbers');
+const aiMessages = document.getElementById('aiMessages');
+
+/* Cria botões 0-36 */
+function createNumberButtons(){
+  grid.innerHTML='';
+  for(let i=0;i<=36;i++){
+    const div=document.createElement('div');
+    div.className='num ' + (i===0? 'zero': (reds.has(i)?'red':'black'));
+    div.textContent=i;
+    div.dataset.num=i;
+    div.addEventListener('click', ()=> addToHistory(i));
+    grid.appendChild(div);
+  }
+}
+createNumberButtons();
+
+/* Render histórico */
+function renderHistory(){
+  historyList.innerHTML='';
+  const slice = history.slice(-50);
+  slice.forEach(n=>{
+    const span = document.createElement('div');
+    span.className='chip ' + (n===0? 'zero': (reds.has(n)?'red':'black'));
+    span.textContent=n;
+    span.title='Duplo clique para remover';
+    span.addEventListener('dblclick', ()=>{
+      const idx = history.lastIndexOf(n);
+      if(idx>-1){ history.splice(idx,1); saveHistory(); updateAll(); }
+    });
+    span.addEventListener('click', ()=> {
+      // copiar para input rápido
+      numInput.value = n;
+    });
+    historyList.appendChild(span);
+  });
+}
+
+/* Análise para exibir */
+function analyze(){
+  const N = history.length;
+  const counts = Array(37).fill(0);
+  let red=0, black=0, green=0, odd=0, even=0;
+  for(let v of history){
+    counts[v]++;
+    if(v===0) green++; else if(reds.has(v)) red++; else black++;
+    if(v!==0){ if(v%2===0) even++; else odd++; }
+  }
+  // top hot
+  const freq = counts.map((c,i)=>({n:i,c})).sort((a,b)=>b.c-a.c);
+  const hot = freq.slice(0,10).filter(x=>x.c>0);
+  const cold = freq.slice().reverse().slice(0,10);
+  // streaks
+  let streakColor=0, streakParity=0;
+  if(N>0){
+    const lastColor = colorOf(history[N-1]);
+    for(let i=N-1;i>=0;i--){ if(colorOf(history[i])===lastColor) streakColor++; else break; }
+    const lastPar = parityOf(history[N-1]);
+    for(let i=N-1;i>=0;i--){ if(parityOf(history[i])===lastPar) streakParity++; else break; }
+  }
+  // last sequence
+  const lastSeq = history.slice(-12).reverse();
+  // return
+  return {N,counts,hot,cold,red,black,odd,even,streakColor,streakParity,lastSeq};
+}
+
+function colorOf(n){ if(n===0) return 'green'; if(reds.has(n)) return 'red'; return 'black'; }
+function parityOf(n){ if(n===0) return 'zero'; return (n%2===0)?'even':'odd'; }
+
+function addStat(label, value){
+  const row = document.createElement('div');
+  row.className = 'stat-row';
+  const l = document.createElement('div'); l.style.color='var(--muted)'; l.style.fontSize='13px'; l.textContent = label;
+  const v = document.createElement('div'); v.style.fontWeight=700; v.style.fontSize='13px'; v.innerHTML = value;
+  row.appendChild(l); row.appendChild(v);
+  analysisPanel.appendChild(row);
+}
+
+/* Mostrar análise */
+function renderAnalysis(){
+  analysisPanel.innerHTML='';
+  const a = analyze();
+  addStat('Total jogadas', a.N);
+  addStat('Vermelhos / Pretos / Verdes', `${a.red} / ${a.black} / ${a.counts? a.counts[0] : 0}`);
+  addStat('Ímpares / Pares', `${a.odd} / ${a.even}`);
+  addStat('Top quentes (até 5)', a.hot.slice(0,5).map(x=>`${x.n} (${x.c})`).join(', ') || '—');
+  addStat('Última sequência (até 12)', a.lastSeq.join(', ') || '—');
+  addStat('Streak cor (últimos)', a.streakColor + ' seguidos');
+  addStat('Streak par/impar (últimos)', a.streakParity + ' seguidos');
+}
+
+/* Algoritmo de pontuação para probabilidade (sinal) */
+function scoreNumbers(){
+  const a = analyze();
+  const counts = a.counts;
+  const N = a.N;
+  // compute max count to normalize
+  const maxC = Math.max(...counts);
+  // recency: give weight to recent values (last 12) with exponential decay
+  const recencyScore = Array(37).fill(0);
+  const recent = history.slice(-12).reverse();
+  recent.forEach((num, idx) => {
+    // idx 0 is most recent. weight 1, 0.8, 0.6...
+    const w = Math.max(0.2, 1 - idx*0.12);
+    recencyScore[num] += w;
+  });
+  // color trend multiplier
+  const colorTrend = a.red >= a.black ? 'red' : 'black';
+  // build final score
+  const scores = [];
+  for(let n=0;n<=36;n++){
+    // base from frequency (normalized)
+    const freqNorm = maxC>0 ? counts[n]/maxC : 0;
+    // recency normalized (max possible ~ sum weights ~ ~sum of w) just use value directly scaled
+    const rec = recencyScore[n] || 0;
+    // color bonus if matches trend
+    const colorBonus = (n===0) ? 0.05 : (colorOf(n)===colorTrend ? 0.12 : 0);
+    // small bias toward numbers that haven't appeared recently? (optional)
+    const coldPenalty = (counts[n]===0 ? 0.02 : 0);
+    // final
+    const score = (0.6 * freqNorm) + (0.35 * (rec/1.6)) + colorBonus + coldPenalty;
+    scores.push({n,score, freq:counts[n], rec});
+  }
+  // sort by score desc, tie-breaker by rec then freq then number
+  scores.sort((a,b)=> {
+    if(b.score!==a.score) return b.score - a.score;
+    if(b.rec!==a.rec) return b.rec - a.rec;
+    if(b.freq!==a.freq) return b.freq - a.freq;
+    return a.n - b.n;
+  });
+  return {scores,analysis:a};
+}
+
+/* Exibe 5 números sugeridos e mensagens AI */
+function showSignal(){
+  const out = scoreNumbers();
+  const top5 = out.scores.slice(0,5);
+  signalNumbers.innerHTML = '';
+  top5.forEach(obj=>{
+    const div = document.createElement('div');
+    const n = obj.n;
+    div.className = 'signal-num ' + (n===0 ? 'zero' : (reds.has(n)?'red':'black'));
+    div.textContent = n;
+    div.title = `Score: ${obj.score.toFixed(3)} — freq:${obj.freq} rec:${obj.rec}`;
+    div.addEventListener('click', ()=>{
+      // copy number to clipboard and add to history
+      navigator.clipboard?.writeText(String(n)).catch(()=>{});
+      addToHistory(n);
+    });
+    signalNumbers.appendChild(div);
+  });
+
+  // AI-like conversational messages in Portuguese
+  const a = out.analysis;
+  const msgs = [];
+  // greeting / summary
+  msgs.push({type:'info', text:`Analisando ${a.N} jogadas. Gerando os 5 números mais propensos de acordo com frequência e recência.`});
+  // color trend
+  const colorTrend = a.red >= a.black ? 'vermelho' : 'preto';
+  msgs.push({type:'trend', text:`Tendência de cor detectada: mesa está mais inclinada ao <strong>${colorTrend}</strong>.`});
+  // streak advice
+  if(a.streakColor >= 3){
+    msgs.push({type:'warn', text:`Sinal: ${a.streakColor} resultados seguidos da mesma cor — cuidado com validade estatística.`});
+  } else {
+    msgs.push({type:'ok', text:`Sem grandes repetições de cor nos últimos giros.`});
+  }
+  // hottest numbers mention
+  if(a.hot && a.hot.length){
+    const topHot = a.hot.slice(0,3).map(x=>x.n).join(', ');
+    msgs.push({type:'hot', text:`Números quentes recentes: ${topHot}. Estou priorizando frequência e recência.`});
+  }
+  // suggest focused tip
+  const topNums = top5.map(x=>x.n).join(', ');
+  msgs.push({type:'action', text:`Sinal gerado: ${topNums}. Recomendo distribuir suas 5 fichas: prefira 3 fichas em números 1-2 do sinal e 1 ficha em 3-4, 1 ficha em cobertura (cor/dúzia).`});
+  // small disclaimer
+  msgs.push({type:'disc', text:`Lembrete: isto é uma análise probabilística — sem garantia. Jogue com responsabilidade.`});
+
+  // render messages
+  aiMessages.innerHTML = '';
+  msgs.forEach(m=>{
+    const div = document.createElement('div');
+    div.className = 'ai-message';
+    div.innerHTML = `<div style="font-size:13px">${m.text}</div>`;
+    aiMessages.appendChild(div);
+  });
+}
+
+/* Ações e persistência */
+function addToHistory(n){
+  n = Number(n);
+  if(isNaN(n) || n<0 || n>36) { alert('Digite um número entre 0 e 36'); return; }
+  history.push(n);
+  saveHistory(); updateAll();
+  numInput.value='';
+}
+addBtn.addEventListener('click', ()=> addToHistory(numInput.value));
+numInput.addEventListener('keydown', (e)=> { if(e.key==='Enter') addToHistory(numInput.value); });
+
+undoBtn.addEventListener('click', ()=> { if(history.length) history.pop(); saveHistory(); updateAll(); });
+clearBtn.addEventListener('click', ()=> { if(confirm('Limpar todo o histórico?')){ history=[]; saveHistory(); updateAll(); }});
+
+exportBtn.addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(history)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'roleta_history.json'; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },2000);
+});
+importBtn.addEventListener('click', ()=> importFile.click());
+importFile.addEventListener('change', (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=> {
+    try {
+      const arr = JSON.parse(reader.result);
+      if(!Array.isArray(arr)) throw new Error('Formato inválido');
+      const ok = arr.every(n=> Number.isInteger(n) && n>=0 && n<=36);
+      if(!ok) throw new Error('Dados inválidos');
+      history = arr.slice(); saveHistory(); updateAll(); alert('Importado com sucesso.');
+    } catch(err){ alert('Erro ao importar: ' + err.message); }
+  };
+  reader.readAsText(f);
+});
+
+getSignalBtn.addEventListener('click', ()=> { showSignal(); });
+refreshSignalBtn.addEventListener('click', ()=> { showSignal(); });
+
+/* localStorage */
+function saveHistory(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch(e){} }
+function loadHistory(){ try { const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return []; const p = JSON.parse(raw); if(Array.isArray(p)) return p; return []; } catch(e){ return []; } }
+
+/* Atualizações */
+function updateAll(){ renderHistory(); renderAnalysis(); showSignal(); }
+
+/* Inicial */
+updateAll();
+
+</script>
+</body>
+</html>
